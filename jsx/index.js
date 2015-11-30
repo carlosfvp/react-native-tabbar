@@ -9,7 +9,7 @@ var {
   TouchableWithoutFeedback
 } = React;
 
-var childernforEach = React.Children.forEach;
+var childrenforEach = React.Children.forEach;
 
 function noop() {}
 
@@ -21,31 +21,21 @@ class Tabbar extends Component {
   render() {
     var props = this.props;
     var itemList = [];
-    var contentView = null;
-
-    childernforEach(props.children, (item) => {
+    childrenforEach(props.children, (item) => {
       var selected = item.props.name == props.selected;
-      childernforEach(item.props.children, (node, index) => {
-        if (index % 2 == 0) {
-          if (selected) {
-            contentView = node;
-          }
-        } else {
-          node = React.addons.cloneWithProps(node, {
-            key: item.props.name,
-            selected: selected,
-            onPress: () => { props.onTabItemPress(item.props.name) }
-          });
-          itemList.push(node);
-        }
+      childrenforEach(item.props.children, (node, index) => {
+        node = React.addons.cloneWithProps(node, {
+          key: item.props.name,
+          selected: selected,
+          onPress: () => { props.onTabItemPress(item.props.name) }
+        });
+
+        itemList.push(node);
       });
     });
 
     return (
       <View style={styles.container}>
-        <View style={styles.contentView}>
-          {contentView}
-        </View>
         <View style={[styles.tabbarView, { height: props.tabHeight }]}>
           {itemList}
         </View>
@@ -83,11 +73,20 @@ class Icon extends Component {
 
   render() {
     var props = this.props;
+    var itemList = [];
+
+    childrenforEach(props.children, (node, index) => {
+      node = React.cloneElement(node, {
+        style: (props.selected) ? node.props.selectedStyle : node.props.defaultStyle
+      });
+      console.log(node.props.style);
+      itemList.push(node);
+    });
 
     return (
       <TouchableWithoutFeedback onPress={props.onPress}>
         <View style={styles.iconView}>
-          {props.children}
+          {itemList}
         </View>
       </TouchableWithoutFeedback>
     );
@@ -95,30 +94,16 @@ class Icon extends Component {
 }
 
 Icon.propTypes = {
-  onPress: React.PropTypes.func
+  onPress: React.PropTypes.func,
+  selectedStyle: React.PropTypes.style,
+  defaultStyle: React.PropTypes.style
 };
 
 Icon.defaultProps = {
-  onPress: noop
+  onPress: noop,
 };
 
-class Content extends Component {
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-    var props = this.props;
-    return (
-      <View style={styles.contentView}>
-        {props.children}
-      </View>
-    );
-  }
-}
-
 Item.Icon = Icon;
-Item.Content = Content;
 Tabbar.Item = Item;
 
 module.exports = Tabbar;
